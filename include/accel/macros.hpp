@@ -116,4 +116,21 @@ ACC_DEBUG_ONLY(                                                                 
     #define ACC_EXPORT __attribute__((visibility("default")))
 #endif
 
+// Class convenience macros
+#define ACC_NON_COPYABLE(cls)           \
+cls(const cls&) = delete;               \
+cls& operator=(const cls&) = delete;
+
+#define ACC_NON_MOVABLE(cls)            \
+cls(cls&&) = delete;                    \
+cls& operator=(cls&&) = delete;
+
+#define ACC_DEFAULT_COPYABLE(cls)       \
+cls(const cls&) = default;              \
+cls& operator=(const cls&) = default;
+
+#define ACC_DEFAULT_MOVABLE(cls)        \
+cls(cls&&) = default;                   \
+cls& operator=(cls&&) = default;
+
 #endif
