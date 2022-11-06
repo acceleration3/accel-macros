@@ -103,7 +103,7 @@ ACC_DEBUG_ONLY(                                                                 
 
 // Export macro
 #if (defined(_MSC_VER) || defined(__MINGW32__))
-    #if defined(STATIC_BUILD)
+    #if !defined(SHARED_BUILD)
         #define ACC_EXPORT
     #else
         #if defined(ACCEL_EXPORTS)
