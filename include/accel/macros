@@ -1,5 +1,5 @@
-#ifndef ACCEL_MACROS_H
-#define ACCEL_MACROS_H
+#ifndef ACCEL_MACROS_HEADER
+#define ACCEL_MACROS_HEADER
 
 #include <cstdint>
 #include <iostream>
