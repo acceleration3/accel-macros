@@ -72,6 +72,15 @@ ACC_DEBUG_ONLY(                                                                 
 // Unused variable
 #define ACC_UNUSED(x) (void)x
 
+// Unreachable path
+#if defined(__GNUC__)
+    #define ACC_UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+    #define ACC_UNREACHABLE __assume(false)
+#else
+    #error Compiler unreachable path builtin not defined
+#endif
+
 // Thread local variable
 #if defined(__GNUC__)
     #define ACC_THREAD_LOCAL __thread
