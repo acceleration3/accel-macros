@@ -24,16 +24,29 @@
 #endif
 
 // Assertions
-#define ACC_ASSERT(expr)                                                                                \
+#define ACC_ASSERT_CUSTOM_MSG(msg, expr)                                                                \
 ACC_DEBUG_ONLY(                                                                                         \
     MACRO_BLOCK_BEGIN                                                                                   \
         if (!(expr))                                                                                    \
         {                                                                                               \
-            std::cerr << "Failed assertion: " << #expr << "\n";                                         \
-            std::cerr << "Location: " << __FILE__ << "@" << __FUNCTION__ << "():" << __LINE__ << "\n";  \
+            std::cerr << msg "\n";                                                                      \
+            std::cerr << "Location: " << __FILE__ << "@" << __func__ << "():" << __LINE__ << "\n";      \
             ACC_BREAK;                                                                                  \
         }                                                                                               \
     MACRO_BLOCK_END                                                                                     \
+)
+
+#define ACC_ASSERT(expr) ACC_ASSERT_CUSTOM_MSG("Failed assertion: " #expr, expr)
+
+#define ACC_ASSERT_EXCEPTION(expr, type)                                            \
+ACC_DEBUG_ONLY(                                                                     \
+    MACRO_BLOCK_BEGIN                                                               \
+        bool caught = false;                                                        \
+        try { expr; }                                                               \
+        catch (const type& e) { caught = true; }                                    \
+        catch (const std::exception& ex) {}                                         \
+        ACC_ASSERT_CUSTOM_MSG("Failed to catch exception of type: " #type, caught); \
+    MACRO_BLOCK_END                                                                 \
 )
 
 // Platform detection
