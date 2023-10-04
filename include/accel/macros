@@ -82,6 +82,13 @@ ACC_DEBUG_ONLY(                                                                 
     #define ARCHITECTURE_ARM
 #endif
 
+// Byte type
+#if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_X86_64) || defined(ARCHITECTURE_ARM) || defined(ARCHITECTURE_ARM64)
+    #define BYTE_TYPE unsigned char
+#else
+    // #define BYTE_TYPE tbd
+#endif
+
 // Unused variable
 #define ACC_UNUSED(x) (void)x
 
