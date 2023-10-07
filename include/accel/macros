@@ -1,9 +1,6 @@
 #ifndef ACCEL_MACROS_HEADER
 #define ACCEL_MACROS_HEADER
 
-#include <cstdint>
-#include <iostream>
-
 #define MACRO_BLOCK_BEGIN do {
 #define MACRO_BLOCK_END } while (0)
 
