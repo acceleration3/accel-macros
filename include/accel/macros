@@ -7,11 +7,126 @@
 #define MACRO_BLOCK_BEGIN do {
 #define MACRO_BLOCK_END } while (0)
 
+// Platform detection
+#if defined(__MINGW32__) || defined(_MSC_VER) || defined(_WIN32) || defined(__CYGWIN__)
+    #define PLATFORM_WINDOWS
+#elif defined(__EMSCRIPTEN__)
+    #define PLATFORM_WEB
+#elif defined(__ANDROID__) || defined(ANDROID)
+    #define PLATFORM_ANDROID
+#elif defined(__linux__)
+    #define PLATFORM_LINUX
+#elif defined(__APPLE__) && defined(__MACH__)
+    #include <TargetConditionals.h>
+    #if TARGET_OS_IPHONE == 1
+        #define PLATFORM_IOS
+    #elif TARGET_OS_MAC == 1
+        #define PLATFORM_MACOS
+    #else
+        #error Unsupported apple platform
+    #endif
+#else
+    #error Unsupported platform
+#endif
+
+// Compiler detection
+#if defined(__GNUC__)
+    #if defined(__clang__)
+        #define COMPILER_CLANG
+    #else
+        #define COMPILER_GCC
+        #if defined(__MINGW32__)
+            #define COMPILER_GCC_MINGW
+            #if defined(__MINGW64__)
+                #define COMPILER_GCC_MINGW64
+            #else
+                #define COMPILER_GCC_MINGW32
+            #endif
+        #endif
+    #endif
+#elif defined(_MSC_VER)
+    #define COMPILER_MSVC
+#else
+    #error Unsupported compiler
+#endif
+
+// CPU architecture detection
+#if defined(__i386__) || defined(i386) || defined(_M_IX86) || defined(_X86_)
+    #define ARCHITECTURE_X86
+#elif defined(__x86_64__) || defined(_M_X64)
+    #define ARCHITECTURE_X86_64
+#elif defined(__arm64__) || defined(__aarch64__)
+    #define ARCHITECTURE_ARM64
+#elif defined(arm) || defined(__arm__) || defined(ARM) || defined(_ARM_)
+    #define ARCHITECTURE_ARM
+#endif
+
+// Byte type
+#if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_X86_64) || defined(ARCHITECTURE_ARM) || defined(ARCHITECTURE_ARM64)
+    #define BYTE_TYPE unsigned char
+#else
+    // #define BYTE_TYPE tbd
+#endif
+
+// Unused variable
+#define ACC_UNUSED(x) (void)x
+
+// Unreachable path
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+    #define ACC_UNREACHABLE __builtin_unreachable()
+#elif defined(COMPILER_MSVC)
+    #define ACC_UNREACHABLE __assume(0)
+#else
+    #error Compiler unreachable path builtin not defined
+#endif
+
+// Thread local variable
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+    #define ACC_THREAD_LOCAL __thread
+#elif defined(COMPILER_MSVC)
+    #define ACC_THREAD_LOCAL __declspec(thread)
+#else
+    #error Compiler thread local storage keyword not defined
+#endif
+
+// Align hint
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+    #define ACC_ALIGN_HINT(x) __attribute__((aligned(x)))
+#elif defined(COMPILER_MSVC)
+    #define ACC_ALIGN_HINT(x) __declspec(align(x))
+#else
+    #error Compiler align hint not defined
+#endif
+
+// Always inline hint
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+    #define ACC_INLINE_HINT __attribute__((always_inline))
+#elif defined(COMPILER_MSVC)
+    #define ACC_INLINE_HINT __forceinline
+#else
+    #error Compiler inline hint not defined
+#endif
+
+// Export macro
+#if defined(COMPILER_MSVC) || defined(COMPILER_GCC_MINGW)
+    #if !defined(SHARED_BUILD)
+        #define ACC_EXPORT
+    #else
+        #if defined(ACCEL_EXPORTS)
+            #define ACC_EXPORT __declspec(dllexport)
+        #else
+            #define ACC_EXPORT __declspec(dllimport)
+        #endif
+    #endif
+#else
+    #define ACC_EXPORT __attribute__((visibility("default")))
+#endif
+
 // Debug trap
-#if defined(_MSC_VER)
-    #define ACC_BREAK __debugbreak()
-#elif defined(__GNUC__)
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
     #define ACC_BREAK __builtin_trap()
+#elif defined(COMPILER_MSVC)
+    #define ACC_BREAK __debugbreak()
 #else
     #error Compiler debug break not defined
 #endif
@@ -48,102 +163,6 @@ ACC_DEBUG_ONLY(                                                                 
         ACC_ASSERT_CUSTOM_MSG("Failed to catch exception of type: " #type, caught); \
     MACRO_BLOCK_END                                                                 \
 )
-
-// Platform detection
-#if defined(__MINGW32__) || defined(_MSC_VER) || defined(_WIN32) || defined(__CYGWIN__)
-    #define PLATFORM_WINDOWS
-#elif defined(__EMSCRIPTEN__)
-    #define PLATFORM_WEB
-#elif defined(__ANDROID__) || defined(ANDROID)
-    #define PLATFORM_ANDROID
-#elif defined(__linux__)
-    #define PLATFORM_LINUX
-#elif defined(__APPLE__) && defined(__MACH__)
-    #include <TargetConditionals.h>
-    #if TARGET_OS_IPHONE == 1
-        #define PLATFORM_IOS
-    #elif TARGET_OS_MAC == 1
-        #define PLATFORM_MACOS
-    #else
-        #error Unsupported apple platform
-    #endif
-#else
-    #error Unsupported platform
-#endif
-
-// CPU architecture detection
-#if defined(__i386__) || defined(i386) || defined(_M_IX86) || defined(_X86_)
-    #define ARCHITECTURE_X86
-#elif defined(__x86_64__) || defined(_M_X64)
-    #define ARCHITECTURE_X86_64
-#elif defined(__arm64__) || defined(__aarch64__)
-    #define ARCHITECTURE_ARM64
-#elif defined(arm) || defined(__arm__) || defined(ARM) || defined(_ARM_)
-    #define ARCHITECTURE_ARM
-#endif
-
-// Byte type
-#if defined(ARCHITECTURE_X86) || defined(ARCHITECTURE_X86_64) || defined(ARCHITECTURE_ARM) || defined(ARCHITECTURE_ARM64)
-    #define BYTE_TYPE unsigned char
-#else
-    // #define BYTE_TYPE tbd
-#endif
-
-// Unused variable
-#define ACC_UNUSED(x) (void)x
-
-// Unreachable path
-#if defined(__GNUC__)
-    #define ACC_UNREACHABLE __builtin_unreachable()
-#elif defined(_MSC_VER)
-    #define ACC_UNREACHABLE __assume(false)
-#else
-    #error Compiler unreachable path builtin not defined
-#endif
-
-// Thread local variable
-#if defined(__GNUC__)
-    #define ACC_THREAD_LOCAL __thread
-#elif defined(_MSC_VER)
-    #define ACC_THREAD_LOCAL __declspec(thread)
-#elif __STDC_VERSION__ >= 201112L
-    #define ACC_THREAD_LOCAL _Thread_local
-#else
-    #error Compiler thread local storage keyword not defined
-#endif
-
-// Align hint
-#if defined(__GNUC__)
-    #define ACC_ALIGN_HINT(x) __attribute__((aligned(x)))
-#elif defined(_MSC_VER)
-    #define ACC_ALIGN_HINT(x) __declspec(align(x))
-#else
-    #error Compiler align hint not defined
-#endif
-
-// Always inline hint
-#if defined(__GNUC__)
-    #define ACC_INLINE_HINT __attribute__((always_inline))
-#elif defined(_MSC_VER)
-    #define ACC_INLINE_HINT __forceinline
-#else
-    #error Compiler inline hint not defined
-#endif
-
-// Export macro
-#if (defined(_MSC_VER) || defined(__MINGW32__))
-    #if !defined(SHARED_BUILD)
-        #define ACC_EXPORT
-    #else
-        #if defined(ACCEL_EXPORTS)
-            #define ACC_EXPORT __declspec(dllexport)
-        #else
-            #define ACC_EXPORT __declspec(dllimport)
-        #endif
-    #endif
-#else
-    #define ACC_EXPORT __attribute__((visibility("default")))
-#endif
 
 // Class convenience macros
 #define ACC_NON_COPYABLE(cls)           \
