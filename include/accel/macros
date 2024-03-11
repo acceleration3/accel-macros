@@ -65,6 +65,15 @@
     // #define BYTE_TYPE tbd
 #endif
 
+// Pretty function
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+    #define ACC_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#elif defined(COMPILER_MSVC)
+    #define ACC_PRETTY_FUNCTION __FUNCSIG__
+#else
+    #error Compiler pretty function not defined
+#endif
+
 // Unused variable
 #define ACC_UNUSED(x) (void)x
 
